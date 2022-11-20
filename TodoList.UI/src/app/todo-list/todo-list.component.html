@@ -1,0 +1,5 @@
+<p>todo-list works!</p>
+<div>
+  <app-card *ngFor="let card of cards" [data]=card [edit]="card.id===-1"></app-card>
+  <fa-icon [icon]="faCartPlus" (click)="addNewCard()"></fa-icon>
+</div>
