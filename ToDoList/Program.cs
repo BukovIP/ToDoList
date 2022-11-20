@@ -1,8 +1,13 @@
+using ToDoList.Repository;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
+builder.Services
+    .AddSingleton<TodoListDbContext>()
+    .AddSingleton<ITodoListRepository, TodoListRepository>();
 
 var app = builder.Build();
 
