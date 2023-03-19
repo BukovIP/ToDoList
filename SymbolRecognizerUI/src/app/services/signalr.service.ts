@@ -15,6 +15,9 @@ export class SignalrService {
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(HUB_URL)
       .build();
+
+    this.startConnection();
+    this.addTransferChartDataListener();
   }
 
   public startConnection = () => {

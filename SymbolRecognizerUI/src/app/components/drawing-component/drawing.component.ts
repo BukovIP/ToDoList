@@ -1,5 +1,14 @@
-import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
-import {fromEvent, pairwise, switchMap, takeUntil} from "rxjs";
+import {Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
+import {
+  from,
+  fromEvent,
+  map,
+  merge,
+  pairwise,
+  switchMap,
+  takeUntil,
+  tap
+} from "rxjs";
 import {Point} from "../../interfaces/point";
 
 @Component({
@@ -8,9 +17,12 @@ import {Point} from "../../interfaces/point";
   styleUrls: ['drawing.component.css']
 })
 export class DrawingComponent implements OnInit {
+  @Output() onData: EventEmitter<{ prevPos: Point, currentPos: Point }> = new EventEmitter();
+  @Output() onShape: EventEmitter<Point[]> = new EventEmitter();
+
   @Input() public width = 600;
   @Input() public height = 400;
-  @Input() public onData: object = (prevPos: Point, currentPos: Point): void=>{};
+
   @Input() public initialData: Point[] = [];
 
   @ViewChild('canvas', {static: true})
@@ -18,69 +30,71 @@ export class DrawingComponent implements OnInit {
 
   private ctx!: CanvasRenderingContext2D | null;
 
+  shape: Point[] = [];
+
   constructor() {
   }
 
   ngOnInit(): void {
     this.ctx = this.canvas.nativeElement.getContext('2d');
     if (!this.ctx)
-      return;
-
-    this.ctx.lineWidth = 5;
-    this.ctx.lineCap = 'round';
-    this.ctx.strokeStyle = '#000';
+      throw new Error('There is no context.');
 
     this.drawInitialData();
-
     this.captureEvents(this.canvas.nativeElement);
   }
 
   private captureEvents(canvasEl: HTMLCanvasElement) {
-    // this will capture all mousedown events from the canvas element
-    fromEvent<MouseEvent>(canvasEl, 'mousedown')
+    const mousedown$ = fromEvent<MouseEvent>(canvasEl, 'mousedown');
+    const mousemove$ = fromEvent<MouseEvent>(canvasEl, 'mousemove');
+    const mouseup$ = fromEvent<MouseEvent>(canvasEl, 'mouseup');
+    const mouseleave$ = fromEvent<MouseEvent>(canvasEl, 'mouseleave');
+
+    merge(mouseup$, mouseleave$).subscribe(()=>this.onShapeEnded());
+    mousedown$
       .pipe(
-        switchMap((e) => {
-          // after a mouse down, we'll record all mouse moves
-          return fromEvent<MouseEvent>(canvasEl, 'mousemove')
+        switchMap(_ => {
+          return mousemove$
             .pipe(
-              // we'll stop (and unsubscribe) once the user releases the mouse
-              // this will trigger a 'mouseup' event
-              takeUntil(fromEvent(canvasEl, 'mouseup')),
-              // we'll also stop (and unsubscribe) once the mouse leaves the canvas (mouseleave event)
-              takeUntil(fromEvent(canvasEl, 'mouseleave')),
-              // pairwise lets us get the previous value to draw a line from
-              // the previous point to the current point
+              takeUntil(mouseup$),
+              takeUntil(mouseleave$),
               pairwise()
             )
-        })
+        }),
+        map(res => {
+          // previous and current position with the offset
+          const rect = canvasEl.getBoundingClientRect();
+          const prevPos: Point = {
+            x: res[0].clientX - rect.left,
+            y: res[0].clientY - rect.top
+          };
+          const currentPos: Point = {
+            x: res[1].clientX - rect.left,
+            y: res[1].clientY - rect.top
+          };
+          return {prevPos, currentPos};
+        }),
+        tap(e => this.onData.emit(e)),
+        tap(e => this.storeShape(e.prevPos, e.currentPos)),
+        tap(e => this.drawOnCanvas(e.prevPos, e.currentPos))
       )
-      .subscribe(res => {
-        const rect = canvasEl.getBoundingClientRect();
-
-        // previous and current position with the offset
-        const prevPos: Point = {
-          x: res[0].clientX - rect.left,
-          y: res[0].clientY - rect.top
-        };
-
-        const currentPos: Point = {
-          x: res[1].clientX - rect.left,
-          y: res[1].clientY - rect.top
-        };
-
-        // this method we'll implement soon to do the actual drawing
-        this.processor(prevPos, currentPos);
-        this.drawOnCanvas(prevPos, currentPos);
-      }, console.error, () => console.log("complete"));
+      .subscribe();
   }
 
-  private processor(prevPos: Point, currentPos: Point) {
-    //this.onData(prevPos, currentPos);
-    console.log(prevPos, currentPos);
-
+  private onShapeEnded(): void {
+    if (this.shape && this.shape.length > 0) {
+      this.onShape.emit(this.shape);
+      this.shape = [];
+      console.log("Shape completed.");
+    }
   }
 
-  private drawOnCanvas(prevPos: Point | null, currentPos: Point) {
+  private storeShape(_: Point, currentPos: Point): void {
+    if (currentPos)
+      this.shape.push(currentPos);
+  }
+
+  private drawOnCanvas(prevPos: Point, currentPos: Point) {
     if (!this.ctx)
       return;
 
@@ -94,17 +108,13 @@ export class DrawingComponent implements OnInit {
   }
 
   private drawInitialData(): void {
-    if (this.initialData == null)
+    if (!this.initialData || this.initialData.length == 0)
       return;
 
-    if (this.initialData.length == 0)
-      return;
-
-    let prevPoint: Point | null = null;
-    for (let i = 0; i < this.initialData.length; i++) {
-      let currentPoint = this.initialData[i];
-      this.drawOnCanvas(prevPoint, currentPoint);
-      prevPoint = currentPoint;
-    }
+    from(this.initialData)
+      .pipe(
+        pairwise(),
+        tap(e=>this.drawOnCanvas(e[0], e[1]) ))
+      .subscribe();
   }
 }
