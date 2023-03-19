@@ -7,6 +7,7 @@ import { ChartComponent } from './components/chart/chart.component';
 import { SignalrService } from './services/signalr.service';
 import { DrawingComponent } from './components/drawing-component/drawing.component';
 import { ChartAllModule } from '@syncfusion/ej2-angular-charts';
+import { ButtonAllModule } from '@syncfusion/ej2-angular-buttons';
 import { DrawingDebugComponent } from './components/drawing-debug/drawing-debug.component'
 
 @NgModule({
@@ -19,7 +20,8 @@ import { DrawingDebugComponent } from './components/drawing-debug/drawing-debug.
   imports: [
     BrowserModule,
     HttpClientModule,
-    ChartAllModule
+    ChartAllModule,
+    ButtonAllModule
   ],
   providers: [SignalrService],
   bootstrap: [AppComponent]

@@ -117,4 +117,9 @@ export class DrawingComponent implements OnInit {
         tap(e=>this.drawOnCanvas(e[0], e[1]) ))
       .subscribe();
   }
+
+  clear(){
+    const canvas = this.canvas.nativeElement;
+    this.ctx?.clearRect(0, 0, canvas.width, canvas.height)
+  }
 }
