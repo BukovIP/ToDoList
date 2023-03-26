@@ -9,6 +9,8 @@ import { DrawingComponent } from './components/drawing-component/drawing.compone
 import { ChartAllModule } from '@syncfusion/ej2-angular-charts';
 import { ButtonAllModule } from '@syncfusion/ej2-angular-buttons';
 import { DrawingDebugComponent } from './components/drawing-debug/drawing-debug.component'
+import {AudioRecorderService} from "./services/audio-recorder.service";
+import { VoiceRecognizerDebuggerComponent } from './components/voice-recognizer-debugger/voice-recognizer-debugger.component';
 
 @NgModule({
   declarations: [
@@ -16,6 +18,7 @@ import { DrawingDebugComponent } from './components/drawing-debug/drawing-debug.
     ChartComponent,
     DrawingComponent,
     DrawingDebugComponent,
+    VoiceRecognizerDebuggerComponent,
   ],
   imports: [
     BrowserModule,
@@ -23,7 +26,10 @@ import { DrawingDebugComponent } from './components/drawing-debug/drawing-debug.
     ChartAllModule,
     ButtonAllModule
   ],
-  providers: [SignalrService],
+  providers: [
+    SignalrService,
+    AudioRecorderService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

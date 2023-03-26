@@ -1,6 +1,4 @@
 import {Component, OnInit, Input} from '@angular/core';
-import {SignalrService} from '../../services/signalr.service';
-import {HttpClient} from '@angular/common/http';
 import {ChartModel} from "../../interfaces/chart.model";
 import {
   AxisModel,
@@ -19,9 +17,9 @@ import {Browser} from "@syncfusion/ej2-base";
 
 export class ChartComponent implements OnInit {
   ngOnInit(): void {
-      throw new Error('Method not implemented.');
+      //throw new Error('Method not implemented.');
   }
-  @Input() title: string = 'Crude Steel Production Annual Growth';
+  @Input() title: string = 'Drawing debugger.';
   @Input() charts: ChartModel[] = [];
 
   //Initializing Primary X Axis
