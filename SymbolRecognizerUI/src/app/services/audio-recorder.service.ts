@@ -13,21 +13,26 @@ export class AudioRecorderService {
   recording: boolean = false;
   error: string = '';
   mediaTrackSettings: MediaTrackSettings | undefined;
+  mediaStreamConstraints: MediaStreamConstraints = {
+    video: false,
+    audio: true,
+  };
+  mediaRecorderOptions: MediaRecorderOptions = {
+    mimeType: 'audio/webm;codecs=pcm',
+    audioBitsPerSecond: 128000
+  };
 
   constructor() {
-    const mediaConstraints: MediaStreamConstraints = {
-      video: false,
-      audio: true,
-    };
+
     navigator.mediaDevices
-      .getUserMedia(mediaConstraints)
+      .getUserMedia(this.mediaStreamConstraints)
       .then(
         this.initRecorder.bind(this),
         this.errorCallback.bind(this)
       );
   }
 
-  public subscribe(): Observable<any> {
+  public subscribe(): Observable<AudioRecognizerRequest> {
     return this.subject;
   }
 
@@ -45,15 +50,15 @@ export class AudioRecorderService {
    * Will be called automatically.
    */
   private initRecorder(stream: MediaStream) {
-    const options: MediaRecorderOptions = {
-      mimeType: 'audio/webm;codecs=pcm',
-      audioBitsPerSecond: 128
-    };
-    this.recorder = new MediaRecorder(stream, options);
-    this.recorder.ondataavailable = this.onDataAvailable;
+    this.recorder = new MediaRecorder(stream, this.mediaRecorderOptions);
+    this.recorder.ondataavailable = event =>
+      event.data.arrayBuffer().then(
+        this.onArrayBuffer.bind(this),
+        this.errorCallback.bind(this)
+      );
+
     const logEvent = (event: Event) => {
       console.log(event);
-
       if (this.recorder)
         this.state = this.recorder.state;
     };
@@ -65,7 +70,6 @@ export class AudioRecorderService {
     this.recorder.onstop = logEvent;
 
     this.LogSettings(stream);
-
 
     /*console.log(stream);
    const tracks = stream.getTracks();
@@ -95,21 +99,7 @@ export class AudioRecorderService {
     this.record.record();*/
   }
 
-  private onDataAvailable(event: BlobEvent) {
-    const blob = event.data;
-    console.log(event);
-    blob.arrayBuffer().then(
-      (p) => {
-        this.onArrayBuffer(p)
-      },
-      p => console.log(p)
-    );
-    /*this.url = URL.createObjectURL(blob);
-    console.log("blob", blob);
-    console.log("url", this.url);*/
-  }
-
-  onArrayBuffer(arrayBuf: ArrayBuffer) {
+  private onArrayBuffer(arrayBuf: ArrayBuffer): void {
     console.log(arrayBuf);
     const int16Array = new Int16Array(arrayBuf, 0, Math.floor(arrayBuf.byteLength / 2));
     console.log(int16Array);
