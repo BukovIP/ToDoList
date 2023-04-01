@@ -21,4 +21,8 @@
     <Folder Include="src\Filters\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BukovIP.Common\BukovIP.Common.csproj" />
+  </ItemGroup>
+
 </Project>

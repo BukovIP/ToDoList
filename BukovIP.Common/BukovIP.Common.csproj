@@ -10,4 +10,8 @@
       <Folder Include="Filers" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Serilog" Version="3.0.0-dev-01958" />
+    </ItemGroup>
+
 </Project>

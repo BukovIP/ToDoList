@@ -1,33 +1,33 @@
 import {Injectable} from '@angular/core';
-import {delay, Observable, of, Subject} from "rxjs";
+import {Observable, Subject} from "rxjs";
+import {AudioRecognizerRequest} from "../interfaces/audio-recognizer-request";
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class AudioRecorderService {
-  subject: Subject<any> = new Subject<any>();
+  subject: Subject<AudioRecognizerRequest> = new Subject<AudioRecognizerRequest>();
   recorder: MediaRecorder | undefined;
   state: string = 'init';
   recording: boolean = false;
   error: string = '';
+  mediaTrackSettings: MediaTrackSettings | undefined;
 
   constructor() {
     const mediaConstraints: MediaStreamConstraints = {
       video: false,
       audio: true,
-
     };
     navigator.mediaDevices
       .getUserMedia(mediaConstraints)
       .then(
-        this.successCallback.bind(this),
+        this.initRecorder.bind(this),
         this.errorCallback.bind(this)
       );
   }
 
-  public subscribe():Observable<any>
-  {
+  public subscribe(): Observable<any> {
     return this.subject;
   }
 
@@ -44,8 +44,12 @@ export class AudioRecorderService {
   /**
    * Will be called automatically.
    */
-  private successCallback(stream: MediaStream) {
-    this.recorder = new MediaRecorder(stream);
+  private initRecorder(stream: MediaStream) {
+    const options: MediaRecorderOptions = {
+      mimeType: 'audio/webm;codecs=pcm',
+      audioBitsPerSecond: 128
+    };
+    this.recorder = new MediaRecorder(stream, options);
     this.recorder.ondataavailable = this.onDataAvailable;
     const logEvent = (event: Event) => {
       console.log(event);
@@ -59,6 +63,9 @@ export class AudioRecorderService {
     this.recorder.onresume = logEvent;
     this.recorder.onpause = logEvent;
     this.recorder.onstop = logEvent;
+
+    this.LogSettings(stream);
+
 
     /*console.log(stream);
    const tracks = stream.getTracks();
@@ -91,13 +98,29 @@ export class AudioRecorderService {
   private onDataAvailable(event: BlobEvent) {
     const blob = event.data;
     console.log(event);
-    console.log(blob);
-
-    this.subject.subscribe(blob.stream);
-    blob.stream().getReader().read().then(p=>console.log(p));
+    blob.arrayBuffer().then(
+      (p) => {
+        this.onArrayBuffer(p)
+      },
+      p => console.log(p)
+    );
     /*this.url = URL.createObjectURL(blob);
     console.log("blob", blob);
     console.log("url", this.url);*/
+  }
+
+  onArrayBuffer(arrayBuf: ArrayBuffer) {
+    console.log(arrayBuf);
+    const int16Array = new Int16Array(arrayBuf, 0, Math.floor(arrayBuf.byteLength / 2));
+    console.log(int16Array);
+    const result: AudioRecognizerRequest = {
+      data: arrayBuf,
+      formattedData: int16Array,
+      sampleRate: this.mediaTrackSettings?.sampleRate,
+      sampleSize: this.mediaTrackSettings?.sampleSize,
+      channelCount: 1,
+    }
+    this.subject.next(result);
   }
 
   private errorCallback(error: any) {
@@ -105,5 +128,16 @@ export class AudioRecorderService {
     this.state = 'error';
     console.error(error);
     console.error(this.error);
+  }
+
+  private LogSettings(stream: MediaStream): void {
+    if (!stream)
+      return;
+    const tracks = stream.getTracks();
+    if (tracks.length == 0)
+      return;
+    const track = tracks[0];
+    this.mediaTrackSettings = track?.getSettings();
+    console.log(this.mediaTrackSettings);
   }
 }
