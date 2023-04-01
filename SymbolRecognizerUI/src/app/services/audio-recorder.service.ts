@@ -10,13 +10,11 @@ export class AudioRecorderService {
 
   recorder: MediaRecorder | undefined;
   state: string = 'init';
-  recording: boolean;
+  recording: boolean = false;
   error: string = '';
   private EventListenerObject: any;
 
   constructor() {
-    this.recording = true;
-
     const mediaConstraints: MediaStreamConstraints = {
       video: false,
       audio: true,
@@ -73,12 +71,13 @@ export class AudioRecorderService {
   }
 
   public startRecording() {
+    this.recording = true;
     this.recorder?.start();
   }
 
   public stopRecording() {
-    this.recording = false;
     this.recorder?.stop();
+    this.recording = false;
   }
 
   private onDataAvailable(event: BlobEvent) {
