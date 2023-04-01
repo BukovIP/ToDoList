@@ -1,4 +1,4 @@
-﻿namespace SymbolRecognizer.Data
+﻿namespace BukovIP.Common.Data
 {
     public interface IRingBuffer<T>
     {

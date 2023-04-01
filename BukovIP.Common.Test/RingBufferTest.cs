@@ -1,9 +1,9 @@
 using FluentAssertions;
-using SymbolRecognizer.Data;
+using BukovIP.Common.Data;
 using System;
 using Xunit;
 
-namespace SymbolRecognizer.Test
+namespace BukovIP.Common.Test
 {
     public class RingBufferTest
     {

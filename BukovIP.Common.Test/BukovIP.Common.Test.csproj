@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SymbolRecognizer\SymbolRecognizer.csproj" />
+    <ProjectReference Include="..\BukovIP.Common\BukovIP.Common.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace SymbolRecognizer.Data
+namespace BukovIP.Common.Data
 {
     public class RingBuffer<T> : IRingBuffer<T>
     {

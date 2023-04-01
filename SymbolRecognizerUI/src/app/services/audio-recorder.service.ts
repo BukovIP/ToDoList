@@ -1,17 +1,16 @@
 import {Injectable} from '@angular/core';
-import {delay, of} from "rxjs";
+import {delay, Observable, of, Subject} from "rxjs";
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class AudioRecorderService {
-
+  subject: Subject<any> = new Subject<any>();
   recorder: MediaRecorder | undefined;
   state: string = 'init';
   recording: boolean = false;
   error: string = '';
-  private EventListenerObject: any;
 
   constructor() {
     const mediaConstraints: MediaStreamConstraints = {
@@ -19,13 +18,33 @@ export class AudioRecorderService {
       audio: true,
 
     };
-    navigator.mediaDevices.getUserMedia(mediaConstraints).then(this.successCallback.bind(this), this.errorCallback.bind(this));
+    navigator.mediaDevices
+      .getUserMedia(mediaConstraints)
+      .then(
+        this.successCallback.bind(this),
+        this.errorCallback.bind(this)
+      );
+  }
+
+  public subscribe():Observable<any>
+  {
+    return this.subject;
+  }
+
+  public startRecording() {
+    this.recording = true;
+    this.recorder?.start();
+  }
+
+  public stopRecording() {
+    this.recorder?.stop();
+    this.recording = false;
   }
 
   /**
    * Will be called automatically.
    */
-  successCallback(stream: MediaStream) {
+  private successCallback(stream: MediaStream) {
     this.recorder = new MediaRecorder(stream);
     this.recorder.ondataavailable = this.onDataAvailable;
     const logEvent = (event: Event) => {
@@ -69,21 +88,13 @@ export class AudioRecorderService {
     this.record.record();*/
   }
 
-  public startRecording() {
-    this.recording = true;
-    this.recorder?.start();
-  }
-
-  public stopRecording() {
-    this.recorder?.stop();
-    this.recording = false;
-  }
-
   private onDataAvailable(event: BlobEvent) {
     const blob = event.data;
     console.log(event);
     console.log(blob);
 
+    this.subject.subscribe(blob.stream);
+    blob.stream().getReader().read().then(p=>console.log(p));
     /*this.url = URL.createObjectURL(blob);
     console.log("blob", blob);
     console.log("url", this.url);*/
