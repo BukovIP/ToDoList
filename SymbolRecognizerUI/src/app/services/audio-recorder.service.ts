@@ -7,23 +7,22 @@ import {AudioRecognizerRequest} from "../interfaces/audio-recognizer-request";
   providedIn: 'root'
 })
 export class AudioRecorderService {
-  subject: Subject<AudioRecognizerRequest> = new Subject<AudioRecognizerRequest>();
-  recorder: MediaRecorder | undefined;
-  state: string = 'init';
-  recording: boolean = false;
-  error: string = '';
-  mediaTrackSettings: MediaTrackSettings | undefined;
-  mediaStreamConstraints: MediaStreamConstraints = {
+  private readonly subject: Subject<AudioRecognizerRequest> = new Subject<AudioRecognizerRequest>();
+  private readonly mediaStreamConstraints: MediaStreamConstraints = {
     video: false,
     audio: true,
   };
-  mediaRecorderOptions: MediaRecorderOptions = {
+  private readonly mediaRecorderOptions: MediaRecorderOptions = {
     mimeType: 'audio/webm;codecs=pcm',
-    audioBitsPerSecond: 128000
+    audioBitsPerSecond: 8000 //128000
   };
+  private recorder: MediaRecorder | undefined;
+  private state: string = 'init';
+  private recording: boolean = false;
+  private error: string = '';
+  private mediaTrackSettings: MediaTrackSettings | undefined;
 
   constructor() {
-
     navigator.mediaDevices
       .getUserMedia(this.mediaStreamConstraints)
       .then(
@@ -32,18 +31,20 @@ export class AudioRecorderService {
       );
   }
 
+  public isRecording(): boolean {
+    return this.recorder?.state === 'recording';
+  }
+
   public subscribe(): Observable<AudioRecognizerRequest> {
     return this.subject;
   }
 
   public startRecording() {
-    this.recording = true;
     this.recorder?.start();
   }
 
   public stopRecording() {
     this.recorder?.stop();
-    this.recording = false;
   }
 
   /**
@@ -101,16 +102,14 @@ export class AudioRecorderService {
 
   private onArrayBuffer(arrayBuf: ArrayBuffer): void {
     console.log(arrayBuf);
-    const int16Array = new Int16Array(arrayBuf, 0, Math.floor(arrayBuf.byteLength / 2));
-    console.log(int16Array);
     const result: AudioRecognizerRequest = {
       data: arrayBuf,
-      formattedData: int16Array,
       sampleRate: this.mediaTrackSettings?.sampleRate,
       sampleSize: this.mediaTrackSettings?.sampleSize,
       channelCount: 1,
     }
-    this.subject.next(result);
+    setTimeout(()=>{this.subject.next(result)},0);
+    //this.subject.next(result);
   }
 
   private errorCallback(error: any) {

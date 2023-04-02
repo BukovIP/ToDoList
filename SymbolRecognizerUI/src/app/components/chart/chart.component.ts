@@ -53,11 +53,11 @@ export class ChartComponent implements OnInit {
   public pentagonMarker: Object = {visible: true, height: 7, width: 7, shape: 'Pentagon', isFilled: true};
 
   public tooltip: TooltipSettingsModel = {
-    enable: true
+    enable: false
   };
   public legend: LegendSeriesModel = {
-    visible: true,
-    enableHighlight: true
+    visible: false,
+    enableHighlight: false
   }
 
   public load(args: ILoadedEventArgs): void {

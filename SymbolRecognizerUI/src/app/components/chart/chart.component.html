@@ -3,7 +3,7 @@
   <e-series-collection>
     <ng-container *ngFor="let chart of charts">
       <e-series [dataSource]='chart.data' type='Line' xName='x' yName='y' [name]="chart.label" width=2
-                [marker]='circleMarker' opacity=1 [colorName]="chart.color"></e-series>
+                 opacity=1 [colorName]="chart.color"></e-series>
     </ng-container>
   </e-series-collection>
 </ejs-chart>

@@ -1,3 +1,4 @@
 <div>
+  <app-chart *ngIf="chartData" [charts]="chartData"></app-chart>
   <button ejs-button (click)="onClick()">{{buttonLabel}}</button>
 </div>
